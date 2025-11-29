@@ -6,7 +6,9 @@
 
 <p class="center">
 	<a href="login.php" class="btn">Login</a>
+	{if $can_subscribe}
 	<a href="register.php" class="btn">Create account</a>
+	{/if}
 </p>
 
 {include file="_foot.tpl"}

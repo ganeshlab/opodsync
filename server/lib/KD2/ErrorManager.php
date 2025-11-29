@@ -178,6 +178,7 @@ class ErrorManager
 		// Catch ASSERT_BAIL errors differently because throwing an exception
 		// in this case results in an execution shutdown, and shutdown handler
 		// isn't even called. See https://bugs.php.net/bug.php?id=53619
+		// TODO: remove when minimum supported version is 8.0+
 		if (PHP_VERSION_ID < 80000 && assert_options(ASSERT_ACTIVE) && assert_options(ASSERT_BAIL) && substr($message, 0, 18) == 'Warning: assert():')
 		{
 			$message .= ' (ASSERT_BAIL detected)';
@@ -968,11 +969,10 @@ class ErrorManager
 	 * @param  integer $level Indentation level (internal use)
 	 * @return string
 	 */
-	static public function dump($var, bool $hide_values = false, int $level = 0): string
+	static public function dump($var, bool $hide_values = false, int $level = 0, array $stack = []): string
 	{
-		if ($level > 20)
-		{
-			return '*RECURSION*';
+		if ($level > 10) {
+			return '*REACHED_MAX_RECURSION_LEVEL*';
 		}
 
 		switch (gettype($var))
@@ -992,7 +992,8 @@ class ErrorManager
 			case 'array':
 			case 'object':
 				if (is_object($var)) {
-					$out = 'object(' . get_class($var) . ') (' . count((array) $var) . ') {' . PHP_EOL;
+					$id = spl_object_id($var);
+					$out = sprintf('object(%s)#%d (%d) {' . PHP_EOL, get_class($var), $id, count((array) $var));
 				}
 				else {
 					$out = 'array(' . count((array) $var) . ') {' . PHP_EOL;
@@ -1017,18 +1018,22 @@ class ErrorManager
 					$var = $var2;
 				}
 
-				foreach ((array)$var as $key=>$value)
+				$stack[] =& $var;
+
+				foreach ((array)$var as $key => $value)
 				{
 					$out .= str_repeat(' ', $level * 2);
 					$out .= is_string($key) ? '["' . $key . '"]' : '[' . $key . ']';
 
-					if ($value === $var) {
+					if ($value === $var || in_array($value, $stack, true)) {
 						$out .= '=> *RECURSION*' . PHP_EOL;
 					}
 					else {
-						$out .= '=> ' . self::dump($value, $hide_values, $level + 1) . PHP_EOL;
+						$out .= '=> ' . self::dump($value, $hide_values, $level + 1, $stack) . PHP_EOL;
 					}
 				}
+
+				array_pop($stack);
 
 				$out .= str_repeat(' ', $level * 2) . '}';
 				return $out;
@@ -1082,8 +1087,11 @@ class ErrorManager
 			$body = file_get_contents($url, false, stream_context_create($opts));
 			$code = null;
 
-			foreach ($http_response_header as $header)
-			{
+			if (function_exists('http_get_last_response_headers')) {
+				$http_response_header = http_get_last_response_headers();
+			}
+
+			foreach ($http_response_header as $header) {
 				$a = substr($header, 0, 7);
 
 				if ($a == 'HTTP/1.')

@@ -15,7 +15,7 @@ spl_autoload_register(function ($class) {
 // Enable exception handler in dev mode before we load the config file
 ErrorManager::enable(ErrorManager::DEVELOPMENT);
 
-ErrorManager::setLogFile(ROOT . 'error.log');
+ErrorManager::setLogFile(ROOT . '/error.log');
 
 class UserException extends \Exception {}
 
@@ -25,17 +25,20 @@ if (file_exists($cfg_file)) {
 	require $cfg_file;
 }
 
+$data_root = defined(__NAMESPACE__ . '\DATA_ROOT') ? constant(__NAMESPACE__ . '\DATA_ROOT') : (getenv('DATA_ROOT') ?: ROOT . '/data');
+
 // Default configuration constants
 $defaults = [
 	'ENABLE_SUBSCRIPTIONS'         => false,
+	'ENABLE_SUBSCRIPTION_CAPTCHA'  => true,
 	'DISABLE_USER_METADATA_UPDATE' => false,
-	'DATA_ROOT'                    => getenv('DATA_ROOT') ?: ROOT . '/data',
-	'CACHE_ROOT'                   => ROOT . '/data/cache',
-	'DB_FILE'                      => ROOT . '/data/data.sqlite',
+	'DATA_ROOT'                    => $data_root,
+	'CACHE_ROOT'                   => $data_root . '/cache',
+	'DB_FILE'                      => $data_root . '/data.sqlite',
 	'SQLITE_JOURNAL_MODE'          => 'TRUNCATE',
 	'ERRORS_SHOW'                  => true,
 	'ERRORS_EMAIL'                 => null,
-	'ERRORS_LOG'                   => ROOT . '/data/error.log',
+	'ERRORS_LOG'                   => $data_root . '/error.log',
 	'ERRORS_REPORT_URL'            => null,
 	'TITLE'                        => 'My oPodSync server',
 	'DEBUG_LOG'                    => null,
@@ -77,10 +80,10 @@ if (!isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) && !empty($_SERVE
 	@list($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) = explode(':', base64_decode(substr($_SERVER['HTTP_AUTHORIZATION'], 6)));
 }
 
-DB::getInstance();
 $gpodder = new GPodder;
 
 $tpl = new Smartyer;
+$tpl->setNamespace(__NAMESPACE__);
 $tpl->setCompiledDir(CACHE_ROOT . '/templates');
 $tpl->setTemplatesDir(ROOT . '/templates');
 $tpl->assign('title', TITLE);

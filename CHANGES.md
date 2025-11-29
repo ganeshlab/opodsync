@@ -1,3 +1,18 @@
+## 0.4.7 (29 November 2025)
+
+* Add some client tests (still incomplete)
+* Refactor API error and route handling
+
+## 0.4.6 (28 November 2025)
+
+* Fix register button was hidden when no user existed
+* Fix login after registration
+* Fix various warnings for PHP 8.5 compatibility (please report any issue)
+
+## 0.4.5 (November 2025)
+
+* Implement various small cosmetic PRs
+
 ## 0.4.4
 
 * Fix login.php redirect (thanks @mx1up)

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * This is an example config for oPodSync
+ * It should be copied to `config.local.php` and placed in the `server/data` directory.
+ */
+
 namespace OPodSync;
 
 /**
@@ -137,3 +142,4 @@ const ERRORS_REPORT_URL = null;
  * Default: null (= disabled)
  * @var string|null
  */
+const DEBUG_LOG = DATA_ROOT . '/debug.log';
