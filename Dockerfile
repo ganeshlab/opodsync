@@ -5,8 +5,6 @@ LABEL Maintainer="BohwaZ <https://bohwaz.net/>" \
 RUN apk --no-cache add php83 php83-ctype php83-opcache php83-session php83-sqlite3
 
 # Setup document root
-RUN mkdir -p /var/www
-RUN mkdir -p /var/www/server
 RUN mkdir -p /var/www/server/data
 
 # Add application
