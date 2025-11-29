@@ -1,4 +1,4 @@
-FROM php:alpine
+FROM php:8.5-alpine
 LABEL Maintainer="BohwaZ <https://bohwaz.net/>" \
       Description="oPodSync"
 
