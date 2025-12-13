@@ -95,6 +95,10 @@ class API
 		http_response_code($code);
 		header('Content-Type: application/json', true);
 
+		if ($code === 401) {
+			header('WWW-Authenticate: Basic realm="Please login"');
+		}
+
 		try {
 			echo json_encode(compact('code', 'message'), JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 		}
@@ -358,10 +362,9 @@ class API
 
 	public function getRequestURI(): string
 	{
-		$url = '/' . trim($_SERVER['REQUEST_URI'] ?? '', '/');
+		$url = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+		$url = '/' . trim($url, '/');
 		$url = substr($url, strlen($this->base_path));
-		$url = strtok($url, '?');
-		strtok('');
 		return $url;
 	}
 
