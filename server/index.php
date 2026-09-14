@@ -2,7 +2,7 @@
 
 namespace OPodSync;
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
 
 // Stop here if we are using CLI server and the requested resource exists,
 // it will be served by PHP HTTP server
@@ -33,6 +33,8 @@ if (PHP_SAPI === 'cli') {
 	exit(0);
 }
 
+$root = parse_url(BASE_URL, PHP_URL_PATH);
+$uri = substr($uri, strlen($root));
 $uri = trim($uri, '/');
 
 // Return 404 is URI is invalid

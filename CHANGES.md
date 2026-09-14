@@ -1,3 +1,14 @@
+## 0.6.0
+
+* New: Add in-browser player that remembers position (thanks @debenore)
+* New: display play progress in list of episodes
+* New: Use relative date for listing last updated feeds
+* Move list of episodes actions to a separate page
+* Fix issues with feed updates reaching max_execution_time (thanks @MartinCa)
+* Fix: durations were wrongly stored when they were in the HH:MM:SS format in feeds
+* Fix: all feeds were always updated, now they're only updated if they have new actions
+* Fix: set timeout for fetching a feed to 5 seconds (should be plenty enough)
+
 ## 0.5.3
 
 * Fix: get around wrong use of NextCloud auth by YourPods client (thanks @kaiwei)

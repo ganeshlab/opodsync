@@ -60,7 +60,7 @@ class Feed
 			$ch = curl_init($this->feed_url);
 			curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
 			curl_setopt($ch, CURLOPT_HTTPHEADER, ['User-Agent: oPodSync']);
-			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 5);
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 			curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -81,7 +81,7 @@ class Feed
 					'header'          => 'User-Agent: oPodSync',
 					'max_redirects'   => 5,
 					'follow_location' => true,
-					'timeout'         => 10,
+					'timeout'         => 5,
 					'ignore_errors'   => true,
 				],
 				'ssl'  => [
@@ -95,15 +95,36 @@ class Feed
 			$body = @file_get_contents($this->feed_url, false, $ctx);
 		}
 
-		$this->last_fetch = time();
-
 		if (!$body) {
 			return false;
 		}
 
-		while (preg_match('!<item[^>]*>(.*?)</item>!s', $body, $match)) {
-			$body = str_replace($match[0], '', $body);
-			$item = $match[1];
+		// Only update feed update time, if the server was reached
+		$this->last_fetch = time();
+		$db = DB::getInstance();
+		$db->simple('UPDATE feeds SET last_fetch = ? WHERE feed_url = ?;', time(), $this->feed_url);
+
+		$item_pattern = '!<item[^>]*>(.+?)</item>!s';
+
+		// Not using an XML parser as some feeds are broken :(
+		if (!preg_match_all($item_pattern, $body, $match)) {
+			// Most likely the feed is missing / 404, don't come back unless we have a new action
+			return false;
+		}
+
+		// Remove items from body
+		$body = preg_replace($item_pattern, '', $body);
+
+		$this->title = $this->getTagValue($body, 'title');
+
+		if (!$this->title) {
+			return false;
+		}
+
+		$pubdate = $this->getTagValue($body, 'pubDate');
+		$language = $this->getTagValue($body, 'language');
+
+		foreach ($match[1] as $item) {
 			$pubdate = $this->getTagValue($item, 'pubDate');
 			$url = $this->getTagAttribute($item, 'enclosure', 'url');
 
@@ -121,15 +142,6 @@ class Feed
 				'description' => $this->getTagValue($item, 'description') ?? $this->getTagValue($item, 'content:encoded'),
 				'duration'    => $this->getDuration($this->getTagValue($item, 'itunes:duration') ?? $this->getTagAttribute($item, 'enclosure', 'length')),
 			];
-		}
-
-		$pubdate = $this->getTagValue($body, 'pubDate');
-		$language = $this->getTagValue($body, 'language');
-
-		$this->title = $this->getTagValue($body, 'title');
-
-		if (!$this->title) {
-			return false;
 		}
 
 		$this->url = $this->getTagValue($body, 'link');
@@ -150,7 +162,7 @@ class Feed
 		if (false !== strpos($str, ':') && ctype_digit(str_replace(':', '', trim($str)))) {
 			$parts = explode(':', $str);
 			$parts = array_map('intval', $parts);
-			$duration = ($parts[2] ?? 0) * 3600 + ($parts[1] ?? 0) * 60 + $parts[0] ?? 0;
+			$duration = (($parts[0] ?? 0) * 3600) + (($parts[1] ?? 0) * 60) + ($parts[2] ?? 0);
 		}
 		else {
 			$duration = (int) $str;

@@ -29,7 +29,7 @@ $data_root = defined(__NAMESPACE__ . '\DATA_ROOT') ? constant(__NAMESPACE__ . '\
 
 // Default configuration constants
 $defaults = [
-	'ENABLE_SUBSCRIPTIONS'         => false,
+	'ENABLE_SUBSCRIPTIONS'         => true,
 	'ENABLE_SUBSCRIPTION_CAPTCHA'  => true,
 	'DISABLE_USER_METADATA_UPDATE' => false,
 	'KARADAV_URL'                  => null,
@@ -43,7 +43,7 @@ $defaults = [
 	'ERRORS_REPORT_URL'            => null,
 	'TITLE'                        => 'My oPodSync server',
 	'DEBUG_LOG'                    => null,
-	'HTTP_SCHEME'                  => !empty($_SERVER['HTTPS']) || $_SERVER['SERVER_PORT'] == 443 ? 'https' : 'http',
+	'HTTP_SCHEME'                  => !empty($_SERVER['HTTPS']) || ($_SERVER['SERVER_PORT'] ?? null) == 443 ? 'https' : 'http',
 ];
 
 foreach ($defaults as $const => $value) {
@@ -73,6 +73,10 @@ foreach ($defaults as $const => $value) {
 }
 
 if (!defined(__NAMESPACE__ . '\BASE_URL')) {
+	if (!isset($_SERVER['SERVER_NAME'])) {
+		throw new \LogicException('SERVER_NAME is not defined. If running in CLI, please set BASE_URL in config.local.php');
+	}
+
 	$name = $_SERVER['SERVER_NAME'];
 	$port = !in_array($_SERVER['SERVER_PORT'], [80, 443]) ? ':' . $_SERVER['SERVER_PORT'] : '';
 	$root = '/';
@@ -121,6 +125,8 @@ $tpl->assign('can_update_feeds', !DISABLE_USER_METADATA_UPDATE);
 $tpl->assign('user', $gpodder->user);
 $tpl->assign('url', BASE_URL);
 $tpl->register_modifier('format_description', [Utils::class, 'format_description']);
+$tpl->register_modifier('format_duration', [Utils::class, 'format_duration']);
+$tpl->register_modifier('relative_date', [Utils::class, 'relative_date']);
 
 
 ErrorManager::setCustomExceptionHandler(__NAMESPACE__. '\\UserException', function ($e) use ($tpl) {

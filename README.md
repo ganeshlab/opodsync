@@ -31,16 +31,16 @@ Requires PHP 7.4+ and SQLite3 with JSON1 extension.
 
 ## Screenshots
 
-<img src="https://github.com/kd2org/opodsync/assets/584819/016b835d-2afe-47ef-86f0-dd8acc51aa89" height=300 /> <img src="https://github.com/kd2org/opodsync/assets/584819/45da98da-ded1-44b3-9607-c114c3fd7dbc" height=300 />
+<img src="scr1.png" height=300 /> <img src="scr2.png" height=300 /> <img src="scr3.png" height=300 />
 
 ## Installation
 
-Just copy the files from the `server` directory into a new directory of your webserver.
+Just copy the files from the `server` directory into a new directory of your webserver, and point a virtual host to this directory (using `DocumentRoot` in Apache).
 
 This should work in most cases. Exceptions are:
 
-* If you are not using Apache, but Caddy, or nginx, make sure to adapt the rules from the `.htaccess` file to your own server.
-* If you are using Apache, but have set-up this server in a sub-folder of your document root, then you will have to adapt the `.htaccess` to your configuration.
+* If you are not using Apache, but Caddy, or nginx, make sure to adapt the rules from the `.htaccess` file to your own server. This is untested.
+* If you are using Apache, but have set-up this server in a sub-folder of your document root, then you will have to adapt the `.htaccess` to your configuration and set `BASE_URL` correctly in `config.local.php` (see below). This is also untested.
 
 ### First account
 
@@ -129,6 +129,7 @@ This server has been tested so far with:
 * [Kasts](https://invent.kde.org/multimedia/kasts) 21.08 - Linux/Windows/Android
 * [PinePods](https://github.com/madeofpendletonwool/PinePods) 0.6.1 - WebServer
 * [Music Assistant](https://www.music-assistant.io/music-providers/gpodder/) (according to their documentation)
+* [Rhythmbox](https://gnome.pages.gitlab.gnome.org/rhythmbox/) 3.5.0 - Linux
 
 Please report if apps work (or not) with other clients.
 
